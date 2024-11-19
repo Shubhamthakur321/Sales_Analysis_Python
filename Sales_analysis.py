@@ -70,3 +70,69 @@ for csv_file, table_name in csv_files:
 
 # Close the connection
 conn.close()
+
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import mysql.connector
+
+db= mysql.connector.connect(host = "localhost",
+                           username = "root",
+                           password = '123456',
+                           database = 'product')
+
+cur = db.cursor()
+
+query = '''select distinct customer_city from customers'''
+cur.execute(query)
+data = cur.fetchall()
+
+query = """SELECT COUNT(*) AS order_count FROM orders WHERE YEAR(order_approved_at) = 2017"""
+cur.execute(query)
+data1= cur.fetchall()
+
+query = """select p.product_category as category, round(sum(payment_value),2) as amount from products p
+join item it on it.product_id = p.product_id
+join payments py on py.order_id = it.order_id
+group by p.product_category"""
+
+cur.execute(query)
+data3 = cur.fetchall()
+df3 = pd.DataFrame(data3,columns=['Categoy','Sales'])
+
+df3['Categoy']=df3['Categoy'].str.upper()
+df3
+
+df3.isnull().sum()
+df3 = df3.dropna()
+
+plt.figure(figsize=(30,15))
+df_filter = df3[df3['Sales'] > 10000000]
+sns.barplot(data= df_filter,x='Categoy',y='Sales', hue='Categoy')
+plt.xticks(rotation = -60)
+plt.show()
+
+query = '''select customer_state, count(customer_id) from customers
+group by customer_state'''
+cur.execute(query)
+data4 = cur.fetchall()
+df4 = pd.DataFrame(data4,columns= ['State','Customer_count'])
+df4 = df4.sort_values('Customer_count',ascending=False)
+
+plt.bar(df4["State"],df4["Customer_count"])
+plt.xticks(rotation = 90)
+plt.show()
+
+query ='''select monthname(order_purchase_timestamp) as months, count(order_id) from product.orders
+where year(order_purchase_timestamp) = 2018
+group by monthname(order_purchase_timestamp) '''
+
+cur.execute(query)
+data5=cur.fetchall()
+df5 = pd.DataFrame(data5,columns= ['State','Customer_count'])
+
+o = ['January','February','March','April','May','June','July','August','September','October']
+sns.barplot(data=df5,x=df5['State'],y=df5['Customer_count'], order=o)
+plt.xticks(rotation = 90)
