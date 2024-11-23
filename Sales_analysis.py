@@ -136,3 +136,30 @@ df5 = pd.DataFrame(data5,columns= ['State','Customer_count'])
 o = ['January','February','March','April','May','June','July','August','September','October']
 sns.barplot(data=df5,x=df5['State'],y=df5['Customer_count'], order=o)
 plt.xticks(rotation = 90)
+
+#Averge product order city wise
+
+query ='''with count_per_order as (select orders.order_id, orders.customer_id, count(item.order_id) oc  from orders 
+join item on orders.order_id =  item.order_id
+group by  orders.order_id, orders.customer_id)
+
+select customers.customer_city,round(avg(oc),2) as avg_order from customers
+join count_per_order on count_per_order.customer_id = customers.customer_id
+group by customers.customer_city order by avg_order desc'''
+cur.execute(query)
+data6 = cur.fetchall()
+df6=pd.DataFrame(data6,columns=(['customer_city','AVG_Order']))
+df6_filter = df6.sort_values(by=['AVG_Order'],ascending=False).head(10)
+df6_filter
+
+# calculate the percentage of total revenue contributed by each prodeuct category.
+
+query = '''select upper(products.product_category)  product_name,
+round((sum(payments.payment_value)/(select sum(payments.payment_value) from payments))*100,2) as sales
+from payments join item on payments.order_id = item.order_id
+join products on products.product_id = item.product_id
+group by product_name;'''
+
+cur.execute(query)
+data7=cur.fetchall()
+df7 = pd.DataFrame(data7,columns=['product_name','sales']).sort_values(by=['sales'],ascending=False)
