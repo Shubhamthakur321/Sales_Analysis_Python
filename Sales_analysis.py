@@ -163,3 +163,17 @@ group by product_name;'''
 cur.execute(query)
 data7=cur.fetchall()
 df7 = pd.DataFrame(data7,columns=['product_name','sales']).sort_values(by=['sales'],ascending=False)
+
+# corelation coffecint of total order and sales amount
+query = '''select upper(products.product_category), count(item.product_id),
+round(avg(item.price),2) from item
+join products on products.product_id = item.product_id
+group by products.product_category'''
+
+cur.execute(query)
+data8=cur.fetchall()
+df8 =pd.DataFrame(data8,columns=['product_name','Product_count','Avg_price'])
+arr1=df8['Product_count']
+arr2=df8['Avg_price']
+
+np.corrcoef([arr1,arr2])
